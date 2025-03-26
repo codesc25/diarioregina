@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diário de Classe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .history-row:hover {
+            background-color: #f3f4f6;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            display: inline-block;
+        }
+        @media (max-width: 768px) {
+            .truncate {
+                max-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-6">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Diário de Classe</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Formulário de Entrada -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <form id="diario-form" class="space-y-4">
+                    <div>
+                        <label for="data" class="block text-sm font-medium text-gray-700 mb-1">Data:</label>
+                        <input type="date" id="data" name="data" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="professor" class="block text-sm font-medium text-gray-700 mb-1">Professor:</label>
+                        <input type="text" id="professor" name="professor" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="disciplina" class="block text-sm font-medium text-gray-700 mb-1">Disciplina:</label>
+                        <input type="text" id="disciplina" name="disciplina" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="turma" class="block text-sm font-medium text-gray-700 mb-1">Turma:</label>
+                       <select id="turma" name="turma" required
+    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <option value="6ºM1">6ºM1</option>
+    <option value="6ºM2">6ºM2</option>
+    <option value="7ºM1">7ºM1</option>
+    <option value="7ºM2">7ºM2</option>
+    <option value="8ºM1">8ºM1</option>
+    <option value="9ºM1">9ºM1</option>
+    <option value="6º/7ºV1">6º/7ºV1</option>
+    <option value="8º/9ºV1">8º/9ºV1</option>
+    <option value="8ºV1">8ºV1</option>
+    <option value="9ºV1">9ºV1</option>
+</select>
+                    </div>
+                    
+                    <div>
+                        <label for="cargaHoraria" class="block text-sm font-medium text-gray-700 mb-1">Carga Horária:</label>
+                        <input type="number" id="cargaHoraria" name="cargaHoraria" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="conteudo" class="block text-sm font-medium text-gray-700 mb-1">Conteúdo:</label>
+                        <textarea id="conteudo" name="conteudo" rows="4" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="observacoes" class="block text-sm font-medium text-gray-700 mb-1">Observações:</label>
+                        <textarea id="observacoes" name="observacoes" rows="4"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                            Salvar
+                        </button>
+                        <button type="button" id="clear-form" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                            Limpar Formulário
+                        </button>
+                        <button type="button" id="export-pdf" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                            Exportar Histórico
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Tabela de Histórico -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Histórico (últimos 31 dias)</h3>
+                <div id="history-list" class="overflow-y-auto" style="max-height: 600px;">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Professor</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disciplina</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Turma</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">C.H.</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conteúdo</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Obs.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-list-body" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="7" class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">Nenhum registro no histórico</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('diario-form');
+            const exportPdfBtn = document.getElementById('export-pdf');
+            const clearFormBtn = document.getElementById('clear-form');
+            const historyListBody = document.getElementById('history-list-body');
+            
+            const localStorageHistoryKey = 'diarioDeClasseHistory';
+
+            // Carregar histórico ao iniciar
+            loadHistory();
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                saveData();
+            });
+
+            exportPdfBtn.addEventListener('click', function() {
+                exportToPdf();
+            });
+
+            clearFormBtn.addEventListener('click', function() {
+                clearForm();
+            });
+
+            function saveData() {
+                const formData = {
+                    id: Date.now(),
+                    data: document.getElementById('data').value,
+                    professor: document.getElementById('professor').value,
+                    disciplina: document.getElementById('disciplina').value,
+                    turma: document.getElementById('turma').value,
+                    cargaHoraria: document.getElementById('cargaHoraria').value,
+                    conteudo: document.getElementById('conteudo').value,
+                    observacoes: document.getElementById('observacoes').value || 'Nenhuma',
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Adicionar ao histórico e limpar registros com mais de 31 dias
+                const history = JSON.parse(localStorage.getItem(localStorageHistoryKey)) || [];
+                history.unshift(formData);
+                
+                // Filtrar registros com mais de 31 dias
+                const now = new Date();
+                const filteredHistory = history.filter(item => {
+                    const itemDate = new Date(item.data);
+                    const diffTime = now - itemDate;
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                    return diffDays <= 31;
+                });
+                
+                localStorage.setItem(localStorageHistoryKey, JSON.stringify(filteredHistory));
+                
+                // Atualizar exibição e limpar formulário
+                displayHistory(filteredHistory);
+                clearForm();
+                
+                alert('Registro salvo com sucesso!');
+            }
+
+            function loadHistory() {
+                const history = JSON.parse(localStorage.getItem(localStorageHistoryKey)) || [];
+                displayHistory(history);
+            }
+
+            function displayHistory(history) {
+                if (history.length === 0) {
+                    historyListBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">Nenhum registro no histórico</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                historyListBody.innerHTML = history.map(item => `
+                    <tr class="history-row">
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${formatDate(item.data)}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.professor}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.disciplina}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.turma}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.cargaHoraria}</td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                            <span class="truncate" title="${item.conteudo}">${item.conteudo}</span>
+                        </td>
+                        <td class="px-3 py-2 text-sm text-gray-500">
+                            <span class="truncate" title="${item.observacoes}">${item.observacoes}</span>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            function clearForm() {
+                document.getElementById('diario-form').reset();
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            }
+
+            function exportToPdf() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Título
+                doc.setFontSize(18);
+                doc.setTextColor(40, 40, 40);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Diário de Classe - Histórico', 14, 20);
+                
+                // Data de emissão
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Emitido em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 28);
+                
+                // Obter histórico
+                const history = JSON.parse(localStorage.getItem(localStorageHistoryKey)) || [];
+                
+                if (history.length === 0) {
+                    alert('Nenhum registro no histórico para exportar!');
+                    return;
+                }
+                
+                // Configurar tabela
+                const columns = [
+                    {header: 'Data', dataKey: 'data'},
+                    {header: 'Professor', dataKey: 'professor'},
+                    {header: 'Disciplina', dataKey: 'disciplina'},
+                    {header: 'Turma', dataKey: 'turma'},
+                    {header: 'C.H.', dataKey: 'cargaHoraria'},
+                    {header: 'Conteúdo', dataKey: 'conteudo'},
+                    {header: 'Observações', dataKey: 'observacoes'}
+                ];
+                
+                const rows = history.map(item => ({
+                    data: formatDate(item.data),
+                    professor: item.professor,
+                    disciplina: item.disciplina,
+                    turma: item.turma,
+                    cargaHoraria: item.cargaHoraria,
+                    conteudo: item.conteudo,
+                    observacoes: item.observacoes
+                }));
+                
+                // Adicionar tabela
+                doc.autoTable({
+                    columns: columns,
+                    body: rows,
+                    startY: 35,
+                    margin: {horizontal: 14},
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 3,
+                        overflow: 'linebreak'
+                    },
+                    headerStyles: {
+                        fillColor: [41, 128, 185],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 245, 245]
+                    },
+                    columnStyles: {
+                        conteudo: {
+                            cellWidth: 40,
+                            overflow: 'linebreak'
+                        },
+                        observacoes: {
+                            cellWidth: 30,
+                            overflow: 'linebreak'
+                        }
+                    }
+                });
+                
+                // Salvar o PDF
+                doc.save(`historico-diario-classe-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
+            }
+        });
+    </script>
+</body>
+</html>
